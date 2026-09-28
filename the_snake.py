@@ -1,6 +1,6 @@
 """Модуль игры Змейка на Pygame."""
 
-from random import choice
+from random import randint
 import sys
 import pygame
 
@@ -43,15 +43,14 @@ class Apple(GameObject):
 
     def randomize_position(self, occupied_positions):
         """Генерирует новую случайную позицию яблока на сетке."""
-        all_positions = {
-            (x * GRID_SIZE, y * GRID_SIZE)
-            for x in range(GRID_WIDTH)
-            for y in range(GRID_HEIGHT)
-        }
-        free_positions = list(all_positions - set(occupied_positions))
+        while True:
+            new_x = randint(0, GRID_WIDTH - 1) * GRID_SIZE
+            new_y = randint(0, GRID_HEIGHT - 1) * GRID_SIZE
+            new_position = (new_x, new_y)
 
-        if free_positions:
-            self.position = choice(free_positions)
+            if new_position not in occupied_positions:
+                self.position = new_position
+                break
 
     def draw(self, surface):
         """Отрисовывает яблоко в виде красного квадрата."""
@@ -98,17 +97,12 @@ class Snake(GameObject):
         new_y = (cur_y + dir_y * GRID_SIZE) % SCREEN_HEIGHT
         new_position = (new_x, new_y)
 
-        body_to_check = (
-            self.positions[:-1] if len(self.positions) > 1 else self.positions
-        )
-        if new_position in body_to_check:
-            return False
-
-        self.positions.insert(0, new_position)
-        if len(self.positions) > self.length:
-            self.positions.pop()
-
-        return True
+        if new_position in self.positions[2:]:
+            self.reset()
+        else:
+            self.positions.insert(0, new_position)
+            if len(self.positions) > self.length:
+                self.positions.pop()
 
     def draw(self, surface):
         """Отрисовывает каждый сегмент змейки на экране."""
@@ -150,10 +144,7 @@ def main():
         clock.tick(10)
 
         handle_keys(snake)
-
-        if not snake.move():
-            snake.reset()
-            apple.randomize_position(snake.positions)
+        snake.move()
 
         if snake.get_head_position() == apple.position:
             snake.length += 1

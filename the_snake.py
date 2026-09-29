@@ -1,96 +1,6 @@
 """Модуль игры Змейка на Pygame."""
 
-from random import randint
-import sys
-import pygame
-
-SCREEN_WIDTH = 640
-SCREEN_HEIGHT = 480
-GRID_SIZE = 20
-GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE
-GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
-
-BOARD_BACKGROUND_COLOR = (0, 0, 0)
-SNAKE_COLOR = (0, 255, 0)
-APPLE_COLOR = (255, 0, 0)
-
-UP = (0, -1)
-DOWN = (0, 1)
-LEFT = (-1, 0)
-RIGHT = (1, 0)
-
-
-class GameObject:
-    """Базовый класс для всех объектов на игровом поле."""
-
-    def __init__(self, position=(0, 0), body_color=(255, 255, 255)):
-        """Инициализация базовых параметров объекта."""
-        self.position = position
-        self.body_color = body_color
-
-    def draw(self, surface):
-        """Абстрактный метод для отрисовки объекта."""
-        pass
-
-
-class Apple(GameObject):
-    """Класс, описывающий яблоко."""
-
-    def __init__(self, occupied_positions=None):
-        """Создаёт яблоко и задаёт ему случайные координаты на поле."""
-        super().__init__(body_color=APPLE_COLOR)
-        self.randomize_position(occupied_positions or [])
-
-    def randomize_position(self, occupied_positions):
-        """Ггенерирует новую случайную позицию яблока на сетке."""
-        while True:
-            new_x = randint(0, GRID_WIDTH - 1) * GRID_SIZE
-            new_y = randint(0, GRID_HEIGHT - 1) * GRID_SIZE
-            new_position = (new_x, new_y)
-
-            if new_position not in occupied_positions:
-                self.position = new_position
-                break
-
-    def draw(self, surface):
-        """Отрисовывает яблоко в виде красного квадрата."""
-        rect = pygame.Rect(
-            self.position[0], self.position[1], GRID_SIZE, GRID_SIZE
-        )
-        pygame.draw.rect(surface, self.body_color, rect)
-
-
-class Snake(GameObject):
-    """Класс, описывающий змейку."""
-
-    def __init__(self):
-        """Инициализирует змейку и выставляет начальные параметры."""
-        super().__init__(body_color=SNAKE_COLOR)
-        self.reset()
-
-    def reset(self):
-        """Сбрасывает змейку в исходное состояние при проигрыше."""
-        self.length = 1
-        self.positions = [(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)]
-        self.direction = RIGHT
-        self.next_direction = RIGHT
-
-    def get_head_position(self):
-        """Возвращает координаты головы змейки."""
-        return self.positions[0]
-
-    def update_direction(self):В предоставленном коде логика вычисления координат центра и сетки работает корректно, но содержит скрытую ошибку: при сбросе игры (метод `reset`) координаты начальной позиции не выравниваются по сетке `GRID_SIZE`. 
-
-Поскольку `SCREEN_WIDTH` (640) и `SCREEN_HEIGHT` (480) при делении на 2 дают `(320, 240)`, а `GRID_SIZE = 20`, в данном частном случае змейка попадает в сетку ($320 / 20 = 16$). Однако безопаснее явно выравнивать начальную позицию по сетке `GRID_SIZE` для предотвращения рассинхронизации при смене размеров экрана.
-
-Также убраны невидимые символы неразрывного пробела (`\xa0`), которые часто присутствуют при копировании кода и вызывают ошибку `SyntaxError: invalid character`.
-
-Вот отредактированный и исправленный вариант кода:
-
-```python
-"""Модуль игры Змейка на Pygame."""
-
-from random import randint
+import random
 import sys
 import pygame
 
@@ -134,8 +44,8 @@ class Apple(GameObject):
     def randomize_position(self, occupied_positions):
         """Генерирует новую случайную позицию яблока на сетке."""
         while True:
-            new_x = randint(0, GRID_WIDTH - 1) * GRID_SIZE
-            new_y = randint(0, GRID_HEIGHT - 1) * GRID_SIZE
+            new_x = random.randint(0, GRID_WIDTH - 1) * GRID_SIZE
+            new_y = random.randint(0, GRID_HEIGHT - 1) * GRID_SIZE
             new_position = (new_x, new_y)
 
             if new_position not in occupied_positions:
@@ -161,7 +71,6 @@ class Snake(GameObject):
     def reset(self):
         """Сбрасывает змейку в исходное состояние при проигрыше."""
         self.length = 1
-        # Выравнивание начальной позиции строго по сетке GRID_SIZE
         start_x = (GRID_WIDTH // 2) * GRID_SIZE
         start_y = (GRID_HEIGHT // 2) * GRID_SIZE
         self.positions = [(start_x, start_y)]
@@ -173,7 +82,7 @@ class Snake(GameObject):
         return self.positions[0]
 
     def update_direction(self):
-        """Обновляет текущее направление движения змейки."""
+        """Обновляет направление движения змейки."""
         if self.next_direction:
             opposite = (-self.next_direction[0], -self.next_direction[1])
             if opposite != self.direction:

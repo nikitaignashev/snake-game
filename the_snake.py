@@ -1,7 +1,9 @@
+
 """Модуль игры Змейка на Pygame."""
 
 import random
 import sys
+
 import pygame
 
 SCREEN_WIDTH = 640
@@ -24,12 +26,12 @@ class GameObject:
     """Базовый класс для всех объектов на игровом поле."""
 
     def __init__(self, position=(0, 0), body_color=(255, 255, 255)):
-        """Инициализация базовых параметров объекта."""
+        """Инициализирует параметры игрового объекта."""
         self.position = position
         self.body_color = body_color
 
     def draw(self, surface):
-        """Абстрактный метод для отрисовки объекта."""
+        """Отрисовывает объект на игровом поле."""
         pass
 
 
@@ -37,25 +39,30 @@ class Apple(GameObject):
     """Класс, описывающий яблоко."""
 
     def __init__(self, occupied_positions=None):
-        """Создаёт яблоко и задаёт ему случайные координаты на поле."""
+        """Создаёт яблоко и задаёт ему случайную позицию."""
         super().__init__(body_color=APPLE_COLOR)
         self.randomize_position(occupied_positions or [])
 
     def randomize_position(self, occupied_positions):
-        """Генерирует новую случайную позицию яблока на сетке."""
-        while True:
-            new_x = random.randint(0, GRID_WIDTH - 1) * GRID_SIZE
-            new_y = random.randint(0, GRID_HEIGHT - 1) * GRID_SIZE
-            new_position = (new_x, new_y)
+        """Генерирует свободную позицию яблока на сетке."""
+        free_positions = [
+            (x * GRID_SIZE, y * GRID_SIZE)
+            for x in range(GRID_WIDTH)
+            for y in range(GRID_HEIGHT)
+            if (x * GRID_SIZE, y * GRID_SIZE)
+            not in occupied_positions
+        ]
 
-            if new_position not in occupied_positions:
-                self.position = new_position
-                break
+        if free_positions:
+            self.position = random.choice(free_positions)
 
     def draw(self, surface):
         """Отрисовывает яблоко в виде красного квадрата."""
         rect = pygame.Rect(
-            self.position[0], self.position[1], GRID_SIZE, GRID_SIZE
+            self.position[0],
+            self.position[1],
+            GRID_SIZE,
+            GRID_SIZE,
         )
         pygame.draw.rect(surface, self.body_color, rect)
 
@@ -64,12 +71,12 @@ class Snake(GameObject):
     """Класс, описывающий змейку."""
 
     def __init__(self):
-        """Инициализирует змейку и выставляет начальные параметры."""
+        """Инициализирует змейку и её начальные параметры."""
         super().__init__(body_color=SNAKE_COLOR)
         self.reset()
 
     def reset(self):
-        """Сбрасывает змейку в исходное состояние при проигрыше."""
+        """Сбрасывает змейку в исходное состояние."""
         self.length = 1
         start_x = (GRID_WIDTH // 2) * GRID_SIZE
         start_y = (GRID_HEIGHT // 2) * GRID_SIZE
@@ -84,7 +91,10 @@ class Snake(GameObject):
     def update_direction(self):
         """Обновляет направление движения змейки."""
         if self.next_direction:
-            opposite = (-self.next_direction[0], -self.next_direction[1])
+            opposite = (
+                -self.next_direction[0],
+                -self.next_direction[1],
+            )
             if opposite != self.direction:
                 self.direction = self.next_direction
 
@@ -103,14 +113,18 @@ class Snake(GameObject):
             self.reset()
         else:
             self.positions.insert(0, new_position)
+
             if len(self.positions) > self.length:
                 self.positions.pop()
 
     def draw(self, surface):
-        """Отрисовывает каждый сегмент змейки на экране."""
+        """Отрисовывает все сегменты змейки."""
         for position in self.positions:
             rect = pygame.Rect(
-                position[0], position[1], GRID_SIZE, GRID_SIZE
+                position[0],
+                position[1],
+                GRID_SIZE,
+                GRID_SIZE,
             )
             pygame.draw.rect(surface, self.body_color, rect)
 
@@ -133,9 +147,11 @@ def handle_keys(snake):
 
 
 def main():
-    """Главный игровой цикл: инициализация, обновление и отрисовка."""
+    """Запускает игру и выполняет основной игровой цикл."""
     pygame.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    screen = pygame.display.set_mode(
+        (SCREEN_WIDTH, SCREEN_HEIGHT)
+    )
     pygame.display.set_caption("Змейка")
     clock = pygame.time.Clock()
 

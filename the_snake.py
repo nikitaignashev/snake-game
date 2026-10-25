@@ -21,6 +21,13 @@ DOWN = (0, 1)
 LEFT = (-1, 0)
 RIGHT = (1, 0)
 
+pygame.init()
+
+screen = pygame.display.set_mode(
+    (SCREEN_WIDTH, SCREEN_HEIGHT)
+)
+clock = pygame.time.Clock()
+
 
 class GameObject:
     """Базовый класс для игровых объектов."""
@@ -148,12 +155,7 @@ def handle_keys(snake):
 
 def main():
     """Запускает игру и выполняет основной игровой цикл."""
-    pygame.init()
-    screen = pygame.display.set_mode(
-        (SCREEN_WIDTH, SCREEN_HEIGHT)
-    )
     pygame.display.set_caption('Змейка')
-    clock = pygame.time.Clock()
 
     snake = Snake()
     apple = Apple(occupied_positions=snake.positions)
